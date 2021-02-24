@@ -9,7 +9,7 @@ import android.util.Patterns;
 import com.brigosha.theclassroom.LoginPackage.data.LoginRepository;
 import com.brigosha.theclassroom.LoginPackage.data.Result;
 import com.brigosha.theclassroom.LoginPackage.data.model.LoggedInUser;
-import com.brigosha.theclassroom.LoginPackage.R;
+import com.brigosha.theclassroom.R;
 
 public class LoginViewModel extends ViewModel {
 
