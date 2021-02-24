@@ -1,5 +1,6 @@
 package com.brigosha.theclassroom.Models;
 
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.brigosha.theclassroom.R;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class User implements Serializable {
     @NonNull
@@ -64,20 +66,26 @@ public class User implements Serializable {
 
 class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
 
+    private ArrayList<User> users;
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return null;
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_user_info,parent,false);
+        return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-
+        holder.itemView.setTag(users.get(position));
+        holder.user_name.setText(users.get(position).getUserName());
+        holder.user_mail.setText(users.get(position).getUserEmail());
+        holder.user_img.setImageResource(R.drawable.ic_menu_myplaces);
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return users.size();
     }
 
     class ViewHolder extends RecyclerView.ViewHolder{
