@@ -2,6 +2,7 @@ package com.brigosha.theclassroom.Models.Adapters;
 
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.brigosha.theclassroom.MainActivity;
 import com.brigosha.theclassroom.Models.User;
 import com.brigosha.theclassroom.R;
+import com.brigosha.theclassroom.VideoCallPackage.VideoCallActivity;
 
 import java.util.ArrayList;
 
@@ -75,6 +77,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
             @Override
             public void onClick(View v) {
                 Toast.makeText((Context) activity,"Calling:  " +  String.valueOf(users.get(position).getUserNumber()),Toast.LENGTH_SHORT).show();
+                ((Context) activity).startActivity( new Intent((Context) activity, VideoCallActivity.class));
             }
         });
     }
