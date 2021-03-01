@@ -54,8 +54,4 @@ public class MainActivity extends AppCompatActivity implements UserAdapter.ItemC
         Toast.makeText(this,"ID: " + users.get(index).getUserId(),Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    public void onCallButtonClicked(int index) {
-        Toast.makeText(this,"Calling " + users.get(index).getUserId(),Toast.LENGTH_SHORT).show();
-    }
 }

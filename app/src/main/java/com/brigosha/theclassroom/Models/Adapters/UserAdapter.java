@@ -8,15 +8,19 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.brigosha.theclassroom.MainActivity;
 import com.brigosha.theclassroom.Models.User;
 import com.brigosha.theclassroom.R;
 
 import java.util.ArrayList;
 
+
+//TODO : Functionality explanation
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
 
     private ArrayList<User> users;
@@ -24,9 +28,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
 
     public interface ItemClicked{
         void onItemClicked(int index);
-        void onCallButtonClicked(int index);
     }
-
 
     public UserAdapter(Context context, ArrayList<User> users){
         this.users = users;
@@ -53,13 +55,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
                     activity.onItemClicked(users.indexOf((User) v.getTag()));
                 }
             });
-
-            user_call_btn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    activity.onCallButtonClicked(users.indexOf((User) v.getTag()));
-                }
-            });
         }
     }
 
@@ -75,6 +70,13 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
         holder.itemView.setTag(users.get(position));
         holder.user_name.setText(users.get(position).getUserName());
         holder.user_mail.setText(users.get(position).getUserEmail());
+
+        holder.user_call_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText((Context) activity,"Calling:  " +  String.valueOf(users.get(position).getUserNumber()),Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
