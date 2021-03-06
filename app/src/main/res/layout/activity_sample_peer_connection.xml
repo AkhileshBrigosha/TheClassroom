@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -35,22 +35,37 @@
                 android:clickable="true"
                 app:srcCompat="@android:drawable/stat_notify_sync"
                 android:layout_alignParentBottom="true"
-                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
                 android:layout_marginRight="30dp"
                 android:layout_marginBottom="30dp"
-                android:onClick="switchCam"/>
+                android:onClick="switchCam"
+                android:focusable="true" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/endCall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
+                android:layout_toLeftOf="@+id/switchCam"
                 android:layout_alignParentBottom="true"
-                android:layout_marginRight="100dp"
+                android:layout_marginEnd="30dp"
                 android:layout_marginBottom="30dp"
                 android:clickable="true"
+                android:focusable="true"
                 android:onClick="endCall"
                 app:srcCompat="@drawable/disconnect" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/speakerBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/switchCam"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="30dp"
+                android:layout_marginBottom="30dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="switchCam"
+                app:srcCompat="@android:drawable/stat_sys_speakerphone" />
 
             <FrameLayout
                 android:layout_width="150dp"
@@ -82,5 +97,5 @@
 
 
         </RelativeLayout>
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

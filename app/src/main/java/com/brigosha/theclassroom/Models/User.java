@@ -15,7 +15,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class User implements Serializable {
-    @NonNull
+
     private String userId;
     @NonNull
     private String userName;

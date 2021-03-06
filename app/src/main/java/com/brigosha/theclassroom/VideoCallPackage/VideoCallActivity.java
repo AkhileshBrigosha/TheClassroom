@@ -5,12 +5,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
 import android.Manifest;
+import android.content.Context;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
 import com.brigosha.theclassroom.R;
 import com.brigosha.theclassroom.databinding.ActivitySamplePeerConnectionBinding;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,6 +21,8 @@ import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
 import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
+import org.webrtc.CameraCapturer;
+import org.webrtc.CameraEnumerationAndroid;
 import org.webrtc.CameraEnumerator;
 import org.webrtc.CameraVideoCapturer;
 import org.webrtc.DataChannel;
@@ -46,6 +51,10 @@ import static io.socket.client.Socket.EVENT_DISCONNECT;
 import static org.webrtc.SessionDescription.Type.ANSWER;
 import static org.webrtc.SessionDescription.Type.OFFER;
 
+import org.apache.commons.lang3.ArrayUtils;
+import java.util.Arrays;
+import java.util.List;
+
 public class VideoCallActivity extends AppCompatActivity {
 
     private static final String TAG = "CompleteActivity";
@@ -62,6 +71,7 @@ public class VideoCallActivity extends AppCompatActivity {
 
     MediaConstraints audioConstraints;
     AudioSource audioSource;
+    AudioManager audioManager;
     org.webrtc.AudioTrack localAudioTrack;
     VideoCapturer videoCapturer;
 
@@ -71,11 +81,26 @@ public class VideoCallActivity extends AppCompatActivity {
     private PeerConnectionFactory factory;
     private VideoTrack videoTrackFromCamera;
 
+    FloatingActionButton speakerBtn;
+    boolean speakerOn = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_sample_peer_connection);
+        speakerBtn = findViewById(R.id.speakerBtn);
         start();
+
+        speakerBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (speakerOn) {
+                    setHeadsetOn();
+                } else {
+                    setSpeakerOn();
+                }
+            }
+        });
     }
 
     @Override
@@ -97,7 +122,7 @@ public class VideoCallActivity extends AppCompatActivity {
     private void start() {
         String[] perms = {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
         if (EasyPermissions.hasPermissions(this, perms)) {
-            connectToSignallingServer();
+            connectServer();
 
             initializeSurfaceViews();
 
@@ -117,34 +142,35 @@ public class VideoCallActivity extends AppCompatActivity {
         startStreamingVideo();
     }
 
-    private void connectToSignallingServer() {
+    private void connectServer() {
         try {
-            socket = IO.socket("https://gentle-sands-15627.herokuapp.com/");
+            socket = IO.socket("https://ancient-brook-66439.herokuapp.com:443/");
+//            socket = IO.socket("https://testsocket.classroom.digital");
 
             socket.on(EVENT_CONNECT, args -> {
-                Log.d(TAG, "connectToSignallingServer: connect");
+                Log.d(TAG, "connectServer: connect");
                 socket.emit("create or join", "foo");
             }).on("ipaddr", args -> {
-                Log.d(TAG, "connectToSignallingServer: ipaddr");
+                Log.d(TAG, "connectServer: ipaddr");
             }).on("created", args -> {
-                Log.d(TAG, "connectToSignallingServer: created");
+                Log.d(TAG, "connectServer: created");
                 isInitiator = true;
             }).on("full", args -> {
-                Log.d(TAG, "connectToSignallingServer: full");
+                Log.d(TAG, "connectServer: full");
             }).on("join", args -> {
-                Log.d(TAG, "connectToSignallingServer: join");
-                Log.d(TAG, "connectToSignallingServer: Another peer made a request to join room");
-                Log.d(TAG, "connectToSignallingServer: This peer is the initiator of room");
+                Log.d(TAG, "connectServer: join");
+                Log.d(TAG, "connectServer: Another peer made a request to join room");
+                Log.d(TAG, "connectServer: This peer is the initiator of room");
                 isChannelReady = true;
             }).on("joined", args -> {
-                Log.d(TAG, "connectToSignallingServer: joined");
+                Log.d(TAG, "connectServer: joined");
                 isChannelReady = true;
             }).on("log", args -> {
                 for (Object arg : args) {
-                    Log.d(TAG, "connectToSignallingServer: " + String.valueOf(arg));
+                    Log.d(TAG, "connectServer: " + String.valueOf(arg));
                 }
             }).on("message", args -> {
-                Log.d(TAG, "connectToSignallingServer: got a message");
+                Log.d(TAG, "connectServer: got a message");
             }).on("message", args -> {
                 try {
                     if (args[0] instanceof String) {
@@ -154,9 +180,9 @@ public class VideoCallActivity extends AppCompatActivity {
                         }
                     } else {
                         JSONObject message = (JSONObject) args[0];
-                        Log.d(TAG, "connectToSignallingServer: got message " + message);
+                        Log.d(TAG, "connectServer: got message " + message);
                         if (message.getString("type").equals("offer")) {
-                            Log.d(TAG, "connectToSignallingServer: received an offer " + isInitiator + " " + isStarted);
+                            Log.d(TAG, "connectServer: received an offer " + isInitiator + " " + isStarted);
                             if (!isInitiator && !isStarted) {
                                 maybeStart();
                             }
@@ -165,7 +191,7 @@ public class VideoCallActivity extends AppCompatActivity {
                         } else if (message.getString("type").equals("answer") && isStarted) {
                             peerConnection.setRemoteDescription(new SimpleSdpObserver(), new SessionDescription(ANSWER, message.getString("sdp")));
                         } else if (message.getString("type").equals("candidate") && isStarted) {
-                            Log.d(TAG, "connectToSignallingServer: receiving candidates");
+                            Log.d(TAG, "connectServer: receiving candidates");
                             IceCandidate candidate = new IceCandidate(message.getString("id"), message.getInt("label"), message.getString("candidate"));
                             peerConnection.addIceCandidate(candidate);
                         }
@@ -177,7 +203,7 @@ public class VideoCallActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }).on(EVENT_DISCONNECT, args -> {
-                Log.d(TAG, "connectToSignallingServer: disconnect");
+                Log.d(TAG, "connectServer: disconnect");
             });
             socket.connect();
         } catch (URISyntaxException e) {
@@ -265,6 +291,9 @@ public class VideoCallActivity extends AppCompatActivity {
 
     private void createVideoTrackFromCameraAndShowIt() {
         audioConstraints = new MediaConstraints();
+        audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+        audioManager.setSpeakerphoneOn(false);
+        audioManager.setMode(AudioManager.MODE_CALL_SCREENING);
         videoCapturer = createVideoCapturer();
         VideoSource videoSource = factory.createVideoSource(videoCapturer);
         videoCapturer.startCapture(VIDEO_RESOLUTION_WIDTH, VIDEO_RESOLUTION_HEIGHT, FPS);
@@ -278,8 +307,6 @@ public class VideoCallActivity extends AppCompatActivity {
         localAudioTrack = factory.createAudioTrack("101", audioSource);
 
     }
-
-
 
     private void startStreamingVideo() {
         MediaStream mediaStream = factory.createLocalMediaStream("ARDAMS");
@@ -410,12 +437,49 @@ public class VideoCallActivity extends AppCompatActivity {
     public void switchCam(View view) {
         if (videoCapturer == null) return;
         ((CameraVideoCapturer) videoCapturer).switchCamera(null);
-        Log.d("ADJ",videoCapturer.toString());
 
+        Log.d("ADJ",videoCapturer.toString());
     }
 
     public void endCall(View view) {
-        onDestroy();
+        audioManager.setSpeakerphoneOn(false);
+        audioManager.setMode(AudioManager.MODE_NORMAL);
+
+        if (socket != null) {
+            sendMessage("bye");
+            socket.disconnect();
+        }
+        peerConnection.dispose();
+        videoCapturer.dispose();
+        audioSource.dispose();
         finish();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        audioManager.setSpeakerphoneOn(false);
+        audioManager.setMode(AudioManager.MODE_NORMAL);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        audioManager.setSpeakerphoneOn(false);
+        audioManager.setMode(AudioManager.MODE_NORMAL);
+    }
+
+    private void setSpeakerOn() {
+        speakerOn = true;
+        speakerBtn.setImageResource(R.drawable.stat_sys_headset);
+        audioManager.setSpeakerphoneOn(true);
+        audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+    }
+
+    private void setHeadsetOn() {
+        speakerOn = false;
+        speakerBtn.setImageResource(R.drawable.stat_sys_speakerphone);
+        audioManager.setSpeakerphoneOn(false);
+        audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
     }
 }
