@@ -2,6 +2,8 @@ plugins {
     id 'com.android.application'
 }
 
+apply plugin: 'realm-android'
+
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
@@ -30,6 +32,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+}
+
+realm {
+    syncEnabled = true
 }
 
 dependencies {
@@ -65,6 +71,9 @@ dependencies {
     implementation files('libs/autobanh.jar')
     implementation files('libs/base_java.jar')
     implementation files('libs/libjingle_peerconnection.jar')
+
+    implementation 'org.apache.commons:commons-text'
+    implementation 'org.apache.commons:commons-text:1.6'
 
 
 
